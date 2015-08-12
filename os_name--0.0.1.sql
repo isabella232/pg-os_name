@@ -136,10 +136,3 @@ CREATE OPERATOR CLASS hash_os_name_ops
         OPERATOR        1       = ,
         FUNCTION        1       hash_os_name(os_name);
  
---source file sql/sample.sql
-CREATE FUNCTION foo(int) RETURNS int AS $$
-BEGIN
-  RETURN $1;
-END
-$$ LANGUAGE 'plpgsql' IMMUTABLE STRICT;
- 
