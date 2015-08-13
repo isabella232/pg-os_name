@@ -152,3 +152,80 @@ os_name_send(PG_FUNCTION_ARGS)
 
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
+
+PG_FUNCTION_INFO_V1(os_name_eq);
+Datum
+os_name_eq(PG_FUNCTION_ARGS)
+{
+  os_name    arg1 = PG_GETARG_UINT8(0);
+  os_name    arg2 = PG_GETARG_UINT8(1);
+
+  PG_RETURN_BOOL(arg1 == arg2);
+}
+
+PG_FUNCTION_INFO_V1(os_name_ne);
+Datum
+os_name_ne(PG_FUNCTION_ARGS)
+{
+  os_name    arg1 = PG_GETARG_UINT8(0);
+  os_name    arg2 = PG_GETARG_UINT8(1);
+
+  PG_RETURN_BOOL(arg1 != arg2);
+}
+
+PG_FUNCTION_INFO_V1(os_name_lt);
+Datum
+os_name_lt(PG_FUNCTION_ARGS)
+{
+  os_name    arg1 = PG_GETARG_UINT8(0);
+  os_name    arg2 = PG_GETARG_UINT8(1);
+
+  PG_RETURN_BOOL(arg1 < arg2);
+}
+
+PG_FUNCTION_INFO_V1(os_name_le);
+Datum
+os_name_le(PG_FUNCTION_ARGS)
+{
+  os_name    arg1 = PG_GETARG_UINT8(0);
+  os_name    arg2 = PG_GETARG_UINT8(1);
+
+  PG_RETURN_BOOL(arg1 <= arg2);
+}
+
+PG_FUNCTION_INFO_V1(os_name_gt);
+Datum
+os_name_gt(PG_FUNCTION_ARGS)
+{
+  os_name    arg1 = PG_GETARG_UINT8(0);
+  os_name    arg2 = PG_GETARG_UINT8(1);
+
+  PG_RETURN_BOOL(arg1 > arg2);
+}
+
+PG_FUNCTION_INFO_V1(os_name_ge);
+Datum
+os_name_ge(PG_FUNCTION_ARGS)
+{
+  os_name    arg1 = PG_GETARG_UINT8(0);
+  os_name    arg2 = PG_GETARG_UINT8(1);
+
+  PG_RETURN_BOOL(arg1 >= arg2);
+}
+
+PG_FUNCTION_INFO_V1(os_name_cmp);
+Datum
+os_name_cmp(PG_FUNCTION_ARGS)
+{
+  os_name a = PG_GETARG_UINT8(0);
+  os_name b = PG_GETARG_UINT8(1);
+
+  PG_RETURN_INT32((int32) a - (int32) b);
+}
+
+PG_FUNCTION_INFO_V1(hash_os_name);
+Datum
+hash_os_name(PG_FUNCTION_ARGS)
+{
+  return hash_uint32((int32) PG_GETARG_UINT8(0));
+}

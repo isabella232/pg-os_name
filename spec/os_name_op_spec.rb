@@ -8,6 +8,7 @@ describe 'os_name_op' do
   it 'should implement gt' do
     query("SELECT 'ios'::os_name > 'android'::os_name").should match 't'
     query("SELECT 'ios'::os_name >= 'android'::os_name").should match 't'
+    query("SELECT 'android'::os_name < 'windows'::os_name").should match 't'
     query("SELECT NOT('ios'::os_name < 'android'::os_name)").should match 't'
     query("SELECT NOT('ios'::os_name <= 'android'::os_name)").should match 't'
   end

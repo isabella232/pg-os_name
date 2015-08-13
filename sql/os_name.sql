@@ -29,28 +29,28 @@ CREATE TYPE os_name (
 COMMENT ON TYPE os_name IS 'a os_name internaly stored as char';
 
 CREATE FUNCTION os_name_eq(os_name, os_name)
-RETURNS boolean LANGUAGE internal IMMUTABLE AS 'chareq';
+RETURNS boolean LANGUAGE C IMMUTABLE AS '$libdir/os_name';
 
 CREATE FUNCTION os_name_ne(os_name, os_name)
-RETURNS boolean LANGUAGE internal IMMUTABLE AS 'charne';
+RETURNS boolean LANGUAGE C IMMUTABLE AS '$libdir/os_name';
 
 CREATE FUNCTION os_name_lt(os_name, os_name)
-RETURNS boolean LANGUAGE internal IMMUTABLE AS 'charlt';
+RETURNS boolean LANGUAGE C IMMUTABLE AS '$libdir/os_name';
 
 CREATE FUNCTION os_name_le(os_name, os_name)
-RETURNS boolean LANGUAGE internal IMMUTABLE AS 'charle';
+RETURNS boolean LANGUAGE C IMMUTABLE AS '$libdir/os_name';
 
 CREATE FUNCTION os_name_gt(os_name, os_name)
-RETURNS boolean LANGUAGE internal IMMUTABLE AS 'chargt';
+RETURNS boolean LANGUAGE C IMMUTABLE AS '$libdir/os_name';
 
 CREATE FUNCTION os_name_ge(os_name, os_name)
-RETURNS boolean LANGUAGE internal IMMUTABLE AS 'charge';
+RETURNS boolean LANGUAGE C IMMUTABLE AS '$libdir/os_name';
 
 CREATE FUNCTION os_name_cmp(os_name, os_name)
-RETURNS integer LANGUAGE internal IMMUTABLE AS 'btcharcmp';
+RETURNS integer LANGUAGE C IMMUTABLE AS '$libdir/os_name';
 
 CREATE FUNCTION hash_os_name(os_name)
-RETURNS integer LANGUAGE internal IMMUTABLE AS 'hashchar';
+RETURNS integer LANGUAGE C IMMUTABLE AS '$libdir/os_name';
 
 CREATE OPERATOR = (
 	LEFTARG = os_name,
