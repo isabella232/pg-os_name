@@ -115,8 +115,9 @@ PG_FUNCTION_INFO_V1(os_name_in);
 Datum
 os_name_in(PG_FUNCTION_ARGS)
 {
+	int i;
 	char *str = PG_GETARG_CSTRING(0);
-	for(int i = 0; str[i]; i++){
+	for(i = 0; str[i]; i++){
   	str[i] = tolower(str[i]);
 	}
 	PG_RETURN_UINT8(os_name_from_str(str));

@@ -24,7 +24,7 @@ CREATE TYPE os_name (
 	RECEIVE        = os_name_recv,
 	SEND           = os_name_send,
 	LIKE           = "char",
-	CATEGORY       = 'N'
+	CATEGORY       = 'S'
 );
 COMMENT ON TYPE os_name IS 'a os_name internaly stored as char';
 
