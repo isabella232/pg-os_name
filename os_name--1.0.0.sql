@@ -1,3 +1,6 @@
+-- complain if script is sourced in psql, rather than via CREATE EXTENSION
+\echo Use "CREATE EXTENSION os_name" to load this file. \quit
+--source file sql/os_name.sql
 CREATE FUNCTION os_name_in(cstring)
 RETURNS os_name
 AS '$libdir/os_name'
@@ -132,3 +135,4 @@ CREATE OPERATOR CLASS hash_os_name_ops
     DEFAULT FOR TYPE os_name USING hash AS
         OPERATOR        1       = ,
         FUNCTION        1       hash_os_name(os_name);
+ 
