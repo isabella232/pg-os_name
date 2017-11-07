@@ -1,6 +1,9 @@
 #include "os_name.h"
 PG_MODULE_MAGIC;
 
+static const os_name INVALID_OSNAME = 0;
+
+
 static inline
 char * create_string (size_t size, const char *instr)
 {
@@ -30,36 +33,36 @@ char *os_name_to_str(os_name c)
   }
 }
 
-static inline uint8
+static inline os_name
 check_os_name_num(const char *str, const char *expected, os_name os)
 {
     if (strcmp(expected, str) != 0)
-        return 0;
+        return INVALID_OSNAME;
 
     return os;
 }
 
-static inline uint8
+static inline os_name
 get_os_name_num_b(const char *str)
 {
     switch (str[1]) {
         case 'a': return check_os_name_num(str, "bada", BADA);
         case 'l': return check_os_name_num(str, "blackberry", BLACKBERRY);
-        default : return 0;
+        default : return INVALID_OSNAME;
     }
 }
 
-static inline uint8
+static inline os_name
 get_os_name_num_s(const char *str)
 {
     switch (str[1]) {
         case 'e': return check_os_name_num(str, "server", SERVER);
         case 'y': return check_os_name_num(str, "symbian", SYMBIAN);
-        default : return 0;
+        default : return INVALID_OSNAME;
     }
 }
 
-static inline uint8
+static inline os_name
 get_os_name_num_w(const char *str)
 {
     switch (str[1]) {
@@ -69,7 +72,7 @@ get_os_name_num_w(const char *str)
                 return check_os_name_num(str, "windows-phone", WPHONE);
             else
                 return check_os_name_num(str, "windows", WINDOWS);
-        default : return 0;
+        default : return INVALID_OSNAME;
     }
 }
 
@@ -90,24 +93,27 @@ get_os_name_num_w(const char *str)
 static inline
 os_name os_name_from_str(const char *str)
 {
+        os_name result = INVALID_OSNAME;
+
 	if (strlen(str) < 3)
 		elog(ERROR, "unknown input os_name: %s", str);
 
 	switch (str[0])
 	{
-		case 'a': return check_os_name_num(str, "android", ANDROID);
-    case 'b': return get_os_name_num_b(str);
-    case 'i': return check_os_name_num(str, "ios", IOS);
-    case 'l': return check_os_name_num(str, "linux", LINUX);
-    case 'm': return check_os_name_num(str, "macos", MACOS);
-    case 's': return get_os_name_num_s(str);
-    case 'w': return get_os_name_num_w(str);
-    case 'u': return check_os_name_num(str, "unknown", UNKNOWN);
+        case 'a': result = check_os_name_num(str, "android", ANDROID); break;
+        case 'b': result = get_os_name_num_b(str); break;
+        case 'i': result = check_os_name_num(str, "ios", IOS); break;
+        case 'l': result = check_os_name_num(str, "linux", LINUX); break;
+        case 'm': result = check_os_name_num(str, "macos", MACOS); break;
+        case 's': result = get_os_name_num_s(str); break;
+        case 'w': result = get_os_name_num_w(str); break;
+        case 'u': result = check_os_name_num(str, "unknown", UNKNOWN); break;
 	}
 
-  elog(ERROR, "unknown input os_name: %s", str);
+        if(result == INVALID_OSNAME)
+                elog(ERROR, "unknown input os_name: %s", str);
 
-	return 0; //keep compiler quit//
+	return result;
 }
 
 
