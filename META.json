@@ -1,0 +1,38 @@
+{
+   "name": "os_name",
+   "abstract": "Enumerable mobile os list, stored in a single-byte, fixed-length type.",
+   "version": "0.0.2",
+   "maintainer": [ "Chris Travers <christravers@adjust.com>", "Manuel Kniep <rapimo@adjust.com>" ],
+   "license": {
+      "PostgreSQL": "http://www.postgresql.org/about/licence"
+   },
+   "provides": { 
+      "os_name": {
+         "version": "0.0.2",
+         "abstract": "Enumerable mobile os type, stored in a single-byte, fixed-length type."
+      }
+   },
+   "meta-spec": {
+     "version": "1.0.0",
+     "url": "http://pgxn.org/meta/spec.txt"
+   },
+   "description": "This extnesion effectively provides a one-byte enum of mobile operating systems.",
+   "prereqs": {
+      "runtime": {
+        "requires": {
+           "PostgreSQL": "9.3.0"
+        }
+      }
+   },
+   "resources": {
+       "bugtracker": {
+           "web": "http://github.com/adjust/pg-os_name/issues"
+       },
+       "repository": {
+          "url": "git://github.com/adjust/pg-os_name.git",
+          "web": "http://github.com/adjust/pg-os_name",
+          "type": "git"
+       }
+   }
+}
+
