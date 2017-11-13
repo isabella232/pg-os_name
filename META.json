@@ -8,6 +8,7 @@
    },
    "provides": { 
       "os_name": {
+         "file": "sql/os_name.sql",
          "version": "0.0.2",
          "abstract": "Enumerable mobile os type, stored in a single-byte, fixed-length type."
       }
