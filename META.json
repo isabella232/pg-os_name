@@ -1,7 +1,7 @@
 {
    "name": "os_name",
    "abstract": "Enumerable mobile os list, stored in a single-byte, fixed-length type.",
-   "version": "0.0.2",
+   "version": "0.0.3",
    "maintainer": [ "Chris Travers <christravers@adjust.com>", "Manuel Kniep <rapimo@adjust.com>" ],
    "license": {
       "PostgreSQL": "http://www.postgresql.org/about/licence"
@@ -9,7 +9,7 @@
    "provides": { 
       "os_name": {
          "file": "sql/os_name.sql",
-         "version": "0.0.2",
+         "version": "0.0.3",
          "abstract": "Enumerable mobile os type, stored in a single-byte, fixed-length type."
       }
    },
