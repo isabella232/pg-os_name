@@ -21,5 +21,7 @@
 *.x86_64
 *.hex
 *.swp
-temp
-results
+test/results
+test/regression.diffs
+test/regression.out
+venv/

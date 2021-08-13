@@ -1,238 +1,222 @@
-#include "os_name.h"
+#include "postgres.h"
+#include "fmgr.h"
+
+#include "access/hash.h"
+#include "catalog/pg_type.h"
+#include "lib/stringinfo.h"
+#include "libpq/pqformat.h"
+#include "utils/array.h"
+#include "utils/builtins.h"
+
 PG_MODULE_MAGIC;
 
-static const os_name INVALID_OSNAME = 0;
+typedef uint8 pg_type;
 
+/*
+ * Type values as uint8, this definition should correspond to PG_TYPE_NAMES
+ * array entries.
+ */
+#define PG_ANDROID 20
+#define PG_ANDROID_TV 30
+#define PG_BADA 40
+#define PG_BLACKBERRY 60
+#define PG_FIRE_TV 70
+#define PG_IOS 80
+#define PG_LINUX 100
+#define PG_MACOS 120
+#define PG_ROKU_TV 130
+#define PG_SAMSUNG_TV 135
+#define PG_SERVER 140
+#define PG_SYMBIAN 160
+#define PG_UNKNOWN 255
+#define PG_WEBOS 180
+#define PG_WINDOWS 200
+#define PG_WINDOWS_PHONE 220
 
-static inline
-char * create_string (size_t size, const char *instr)
-{
-    char *str = palloc0(size);
-    memcpy(str, instr, size);
-    return str;
-}
-
-static inline
-char *os_name_to_str(os_name c)
-{
-	switch (c)
-  {
-      case ANDROID: return create_string(CONST_STRING("android"));
-      case BADA: return create_string(CONST_STRING("bada"));
-      case BLACKBERRY: return create_string(CONST_STRING("blackberry"));
-      case IOS: return create_string(CONST_STRING("ios"));
-      case LINUX: return create_string(CONST_STRING("linux"));
-      case MACOS: return create_string(CONST_STRING("macos"));
-      case SERVER: return create_string(CONST_STRING("server"));
-      case SYMBIAN: return create_string(CONST_STRING("symbian"));
-      case WEBOS: return create_string(CONST_STRING("webos"));
-      case WINDOWS: return create_string(CONST_STRING("windows"));
-      case WPHONE: return create_string(CONST_STRING("windows-phone"));
-      case UNKNOWN: return create_string(CONST_STRING("unknown"));
-      default: elog(ERROR, "internal error unexpected num in os_name_to_str");
-  }
-}
-
-static inline os_name
-check_os_name_num(const char *str, const char *expected, os_name os)
-{
-    if (strcmp(expected, str) != 0)
-        return INVALID_OSNAME;
-
-    return os;
-}
-
-static inline os_name
-get_os_name_num_b(const char *str)
-{
-    switch (str[1]) {
-        case 'a': return check_os_name_num(str, "bada", BADA);
-        case 'l': return check_os_name_num(str, "blackberry", BLACKBERRY);
-        default : return INVALID_OSNAME;
-    }
-}
-
-static inline os_name
-get_os_name_num_s(const char *str)
-{
-    switch (str[1]) {
-        case 'e': return check_os_name_num(str, "server", SERVER);
-        case 'y': return check_os_name_num(str, "symbian", SYMBIAN);
-        default : return INVALID_OSNAME;
-    }
-}
-
-static inline os_name
-get_os_name_num_w(const char *str)
-{
-    switch (str[1]) {
-        case 'e': return check_os_name_num(str, "webos", WEBOS);
-        case 'i':
-            if(str[7] == '-'  )
-                return check_os_name_num(str, "windows-phone", WPHONE);
-            else
-                return check_os_name_num(str, "windows", WINDOWS);
-        default : return INVALID_OSNAME;
-    }
-}
-
- /*
-	allowed are
- 		android
-    blackberry
-    ios
-    linux
-    macos
-    server
-    symbian
-    webos
-    windows
-    windows
-    unknown
-*/
-static inline
-os_name os_name_from_str(const char *str)
-{
-        os_name result = INVALID_OSNAME;
-
-	if (strlen(str) < 3)
-		elog(ERROR, "unknown input os_name: %s", str);
-
-	switch (str[0])
-	{
-        case 'a': result = check_os_name_num(str, "android", ANDROID); break;
-        case 'b': result = get_os_name_num_b(str); break;
-        case 'i': result = check_os_name_num(str, "ios", IOS); break;
-        case 'l': result = check_os_name_num(str, "linux", LINUX); break;
-        case 'm': result = check_os_name_num(str, "macos", MACOS); break;
-        case 's': result = get_os_name_num_s(str); break;
-        case 'w': result = get_os_name_num_w(str); break;
-        case 'u': result = check_os_name_num(str, "unknown", UNKNOWN); break;
+/*
+ * Type values as string, this definition should correspond to their
+ * indexes above.
+ */
+#define PG_TYPE_NAMES { \
+	{ PG_ANDROID, "android" },  \
+	{ PG_ANDROID_TV, "android-tv" },  \
+	{ PG_BADA, "bada" },  \
+	{ PG_BLACKBERRY, "blackberry" },  \
+	{ PG_FIRE_TV, "fire-tv" },  \
+	{ PG_IOS, "ios" },  \
+	{ PG_LINUX, "linux" },  \
+	{ PG_MACOS, "macos" },  \
+	{ PG_ROKU_TV, "roku-tv" },  \
+	{ PG_SAMSUNG_TV, "samsung-tv" },  \
+	{ PG_SERVER, "server" },  \
+	{ PG_SYMBIAN, "symbian" },  \
+	{ PG_UNKNOWN, "unknown" },  \
+	{ PG_WEBOS, "webos" },  \
+	{ PG_WINDOWS, "windows" },  \
+	{ PG_WINDOWS_PHONE, "windows-phone" } \
 	}
 
-        if(result == INVALID_OSNAME)
-                elog(ERROR, "unknown input os_name: %s", str);
+typedef struct PgTypeStruct
+{
+	pg_type num;
+	const char *name;
+} PgTypeStruct;
 
-	return result;
-}
+/*
+ * Sorted array of values which is used to get uint8 representation using
+ * bsearch.
+ */
+static const PgTypeStruct pg_type_list_sorted[] = PG_TYPE_NAMES;
 
+#define PG_TYPE_NUM	sizeof(pg_type_list_sorted) / sizeof(PgTypeStruct)
+
+/*
+ * Array of values which is used to get type name by its number.
+ */
+static PgTypeStruct pg_type_list[PG_UINT8_MAX + 1];
+static bool pg_type_list_initialized = false;
+
+#define PG_RETURN_UINT8(x) return UInt8GetDatum(x)
+#define PG_GETARG_UINT8(x) DatumGetUInt8(PG_GETARG_DATUM(x))
 
 PG_FUNCTION_INFO_V1(os_name_in);
+PG_FUNCTION_INFO_V1(os_name_out);
+PG_FUNCTION_INFO_V1(os_name_recv);
+PG_FUNCTION_INFO_V1(os_name_send);
+
+PG_FUNCTION_INFO_V1(os_name_get_list);
+
+static int
+pg_type_item_cmp(const void *p1, const void *p2)
+{
+	const PgTypeStruct *a1 = (const PgTypeStruct *) p1;
+	const PgTypeStruct *a2 = (const PgTypeStruct *) p2;
+
+	/* Case-independent comparison */
+	return pg_strcasecmp(a1->name, a2->name);
+}
+
+static inline pg_type
+pg_type_from_str(const char *str)
+{
+	PgTypeStruct *found;
+	PgTypeStruct key;
+
+	key.name = str;
+	found = (PgTypeStruct *) bsearch(&key, pg_type_list_sorted,
+									 PG_TYPE_NUM,
+									 sizeof(PgTypeStruct),
+									 pg_type_item_cmp);
+	if (found == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("unknown input value: %s", str)));
+
+	return found->num;
+}
+
+/*
+ * Initialize large array of values by available sorted list of type values.
+ */
+static void
+pg_type_list_initialize(void)
+{
+	MemSet(pg_type_list, 0, sizeof(pg_type_list));
+
+	for (int i = 0; i < PG_TYPE_NUM; i++)
+	{
+		const PgTypeStruct *item = &pg_type_list_sorted[i];
+
+		pg_type_list[item->num] = *item;
+	}
+}
+
+static inline char *
+pg_type_to_str(pg_type c)
+{
+	PgTypeStruct *res;
+
+	if (!pg_type_list_initialized)
+	{
+		pg_type_list_initialize();
+		pg_type_list_initialized = true;
+	}
+
+	if (c >= PG_UINT8_MAX + 1)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("unexpected type value: %d", c)));
+
+	res = &pg_type_list[c];
+	if (res->name == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("unexpected type value: %d", c)));
+
+	return pstrdup(res->name);
+}
+
+/*
+ * SQL-callable functions.
+ */
+
 Datum
 os_name_in(PG_FUNCTION_ARGS)
 {
-	int i;
-	char *str = PG_GETARG_CSTRING(0);
-	for(i = 0; str[i]; i++){
-  	str[i] = tolower(str[i]);
-	}
-	PG_RETURN_UINT8(os_name_from_str(str));
+	char	   *str = PG_GETARG_CSTRING(0);
+
+	PG_RETURN_UINT8(pg_type_from_str(str));
 }
 
-PG_FUNCTION_INFO_V1(os_name_out);
 Datum
 os_name_out(PG_FUNCTION_ARGS)
 {
-	os_name c = PG_GETARG_UINT8(0);
-	PG_RETURN_CSTRING(os_name_to_str(c));
+	pg_type		s = PG_GETARG_UINT8(0);
+
+	PG_RETURN_CSTRING(pg_type_to_str(s));
 }
 
-PG_FUNCTION_INFO_V1(os_name_recv);
 Datum
 os_name_recv(PG_FUNCTION_ARGS)
 {
 	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
 
 	PG_RETURN_UINT8(pq_getmsgbyte(buf));
-
 }
 
-PG_FUNCTION_INFO_V1(os_name_send);
 Datum
 os_name_send(PG_FUNCTION_ARGS)
 {
-	os_name c = PG_GETARG_UINT8(0);
+	pg_type		s = PG_GETARG_UINT8(0);
 	StringInfoData buf;
 
 	pq_begintypsend(&buf);
-	pq_sendbyte(&buf, c);
+	pq_sendbyte(&buf, s);
 
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
-PG_FUNCTION_INFO_V1(os_name_eq);
 Datum
-os_name_eq(PG_FUNCTION_ARGS)
+os_name_get_list(PG_FUNCTION_ARGS)
 {
-  os_name    arg1 = PG_GETARG_UINT8(0);
-  os_name    arg2 = PG_GETARG_UINT8(1);
+	ArrayBuildState *astate = NULL;
 
-  PG_RETURN_BOOL(arg1 == arg2);
-}
+	if (!pg_type_list_initialized)
+	{
+		pg_type_list_initialize();
+		pg_type_list_initialized = true;
+	}
 
-PG_FUNCTION_INFO_V1(os_name_ne);
-Datum
-os_name_ne(PG_FUNCTION_ARGS)
-{
-  os_name    arg1 = PG_GETARG_UINT8(0);
-  os_name    arg2 = PG_GETARG_UINT8(1);
+	for (int i = 0; i < PG_UINT8_MAX + 1; i++)
+	{
+		if (pg_type_list[i].name == NULL)
+			continue;
 
-  PG_RETURN_BOOL(arg1 != arg2);
-}
+		astate = accumArrayResult(astate,
+								  CStringGetTextDatum(pg_type_list[i].name),
+								  false, TEXTOID, CurrentMemoryContext);
+	}
 
-PG_FUNCTION_INFO_V1(os_name_lt);
-Datum
-os_name_lt(PG_FUNCTION_ARGS)
-{
-  os_name    arg1 = PG_GETARG_UINT8(0);
-  os_name    arg2 = PG_GETARG_UINT8(1);
-
-  PG_RETURN_BOOL(arg1 < arg2);
-}
-
-PG_FUNCTION_INFO_V1(os_name_le);
-Datum
-os_name_le(PG_FUNCTION_ARGS)
-{
-  os_name    arg1 = PG_GETARG_UINT8(0);
-  os_name    arg2 = PG_GETARG_UINT8(1);
-
-  PG_RETURN_BOOL(arg1 <= arg2);
-}
-
-PG_FUNCTION_INFO_V1(os_name_gt);
-Datum
-os_name_gt(PG_FUNCTION_ARGS)
-{
-  os_name    arg1 = PG_GETARG_UINT8(0);
-  os_name    arg2 = PG_GETARG_UINT8(1);
-
-  PG_RETURN_BOOL(arg1 > arg2);
-}
-
-PG_FUNCTION_INFO_V1(os_name_ge);
-Datum
-os_name_ge(PG_FUNCTION_ARGS)
-{
-  os_name    arg1 = PG_GETARG_UINT8(0);
-  os_name    arg2 = PG_GETARG_UINT8(1);
-
-  PG_RETURN_BOOL(arg1 >= arg2);
-}
-
-PG_FUNCTION_INFO_V1(os_name_cmp);
-Datum
-os_name_cmp(PG_FUNCTION_ARGS)
-{
-  os_name a = PG_GETARG_UINT8(0);
-  os_name b = PG_GETARG_UINT8(1);
-
-  PG_RETURN_INT32((int32) a - (int32) b);
-}
-
-PG_FUNCTION_INFO_V1(hash_os_name);
-Datum
-hash_os_name(PG_FUNCTION_ARGS)
-{
-  return hash_uint32((int32) PG_GETARG_UINT8(0));
+	Assert(astate != NULL);
+	PG_RETURN_ARRAYTYPE_P(makeArrayResult(astate, CurrentMemoryContext));
 }

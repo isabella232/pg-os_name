@@ -2,17 +2,17 @@ name: CI
 
 on:
   push:
-    branches: ['*']
+    branches:
+      - master
   pull_request:
-    branches: ['*']
 
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
-        pg: [13, 12, 11, 10, 9.6, 9.5]
-    name: PostgreSQL ${{ matrix.pg }}
+        pg: [13, 12, 11, 10]
+    name: 🐘 PostgreSQL ${{ matrix.pg }}
     runs-on: ubuntu-latest
     container: zilder/pg-ext-check
     steps:

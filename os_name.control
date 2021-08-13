@@ -1,5 +1,6 @@
-        # os_name extension
-        comment = 'Enum of mobile operating systens'
-default_version = '0.0.3'
-        relocatable = true
-        requires = ''
+# os_name extension
+comment = 'An enum type for os_name'
+default_version = '0.0.4'
+relocatable = true
+requires = ''
+module_pathname = '$libdir/os_name'
