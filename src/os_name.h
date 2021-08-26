@@ -14,11 +14,15 @@ typedef uint8 os_name;
 
 
 #define ANDROID     20
+#define ANDROID_TV  30
 #define BADA        40
 #define BLACKBERRY  60
+#define FIRE_TV     70
 #define IOS         80
 #define LINUX      100
 #define MACOS      120
+#define ROKU_TV    130
+#define SAMSUNG_TV 135
 #define SERVER     140
 #define SYMBIAN    160
 #define WEBOS      180

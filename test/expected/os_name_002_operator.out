@@ -1,0 +1,35 @@
+\t
+CREATE TABLE os_name_table_window
+AS SELECT
+		name cur_value,
+		(LEAD(name) OVER ()) next_value
+	FROM (SELECT unnest(name::os_name[]) AS name
+		FROM os_name_get_list() list(name)) list;
+SELECT
+	cur_value, next_value,
+	cur_value > next_value AS gt,
+	cur_value >= next_value AS ge,
+	cur_value >= cur_value AS ge2,
+	cur_value < next_value AS lt,
+	cur_value <= next_value AS le,
+	cur_value <= cur_value AS le2,
+	cur_value = cur_value AS eq,
+	cur_value != cur_value AS nq
+FROM os_name_table_window;
+ android       | android-tv    | f  | f  | t   | t  | t  | t   | t  | f
+ android-tv    | bada          | f  | f  | t   | t  | t  | t   | t  | f
+ bada          | blackberry    | f  | f  | t   | t  | t  | t   | t  | f
+ blackberry    | fire-tv       | f  | f  | t   | t  | t  | t   | t  | f
+ fire-tv       | ios           | f  | f  | t   | t  | t  | t   | t  | f
+ ios           | linux         | f  | f  | t   | t  | t  | t   | t  | f
+ linux         | macos         | f  | f  | t   | t  | t  | t   | t  | f
+ macos         | roku-tv       | f  | f  | t   | t  | t  | t   | t  | f
+ roku-tv       | samsung-tv    | f  | f  | t   | t  | t  | t   | t  | f
+ samsung-tv    | server        | f  | f  | t   | t  | t  | t   | t  | f
+ server        | symbian       | f  | f  | t   | t  | t  | t   | t  | f
+ symbian       | webos         | f  | f  | t   | t  | t  | t   | t  | f
+ webos         | windows       | f  | f  | t   | t  | t  | t   | t  | f
+ windows       | windows-phone | f  | f  | t   | t  | t  | t   | t  | f
+ windows-phone | unknown       | f  | f  | t   | t  | t  | t   | t  | f
+ unknown       |               | t  | t  | t   | f  | f  | t   | t  | f
+

@@ -1,5 +1,5 @@
-        # os_name extension
-        comment = 'Enum of mobile operating systens'
-default_version = '0.0.3'
-        relocatable = true
-        requires = ''
+# os_name extension
+comment = 'Enum of mobile operating systens'
+default_version = '0.0.4'
+relocatable = true
+requires = ''

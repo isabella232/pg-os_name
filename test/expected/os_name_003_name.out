@@ -1,0 +1,28 @@
+\t
+SELECT v::text::os_name
+FROM os_name_table;
+ android
+ android-tv
+ bada
+ blackberry
+ fire-tv
+ ios
+ linux
+ macos
+ roku-tv
+ samsung-tv
+ server
+ symbian
+ webos
+ windows
+ windows-phone
+ unknown
+
+SELECT 'invalid_name'::os_name;
+ERROR:  unknown input os_name: invalid_name
+LINE 1: SELECT 'invalid_name'::os_name;
+               ^
+SELECT ''::os_name;
+ERROR:  unknown input os_name: 
+LINE 1: SELECT ''::os_name;
+               ^

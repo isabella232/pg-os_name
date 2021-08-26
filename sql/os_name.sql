@@ -154,3 +154,8 @@ CREATE OPERATOR CLASS hash_os_name_ops
     DEFAULT FOR TYPE os_name USING hash AS
         OPERATOR        1       = ,
         FUNCTION        1       hash_os_name(os_name);
+
+CREATE FUNCTION os_name_get_list()
+RETURNS text[]
+AS '$libdir/os_name'
+LANGUAGE C IMMUTABLE PARALLEL SAFE;
